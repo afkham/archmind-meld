@@ -1,7 +1,7 @@
 import ballerinax/github;
 import ballerina/http;
 
-// import ballerinax/github;
+configurable string ghaccessToken = ?;
 
 # A service representing a network-accessible API
 # bound to port `9090`.
@@ -12,24 +12,13 @@ service / on new http:Listener(9090) {
 
         github:Client ghClient = check new (config = {
             auth: {
-                token: "c"
+                token: ghaccessToken
             }
         });
-        // Send a response back to the caller.
+        stream<github:Repository, error?> getRepoStream = check ghClient->getRepositories();
 
-        // string[] r = [];
-        // int i = 0;
-        stream<github:Repository, error?> getRepositoriesResponse = check ghClient->getRepositories();
-        // foreach var x in check getRepositoriesResponse {
-        //     if x is github:Repository {
-        //         r[i] = x.name;
-        //         i = i + 1;
-        //     }
-        // }
-
-        string[]? repos = check from github:Repository r in getRepositoriesResponse select r.name;
-        check getRepositoriesResponse.close();
-
+        string[]? repos = check from github:Repository repo in getRepoStream select repo.name;
+        //check getRepoStream.close();
 
         return repos;
     }
